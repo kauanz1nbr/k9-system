@@ -1,7 +1,7 @@
 import os
+import ollama
 import streamlit as st
 import streamlit.components.v1 as components
-import requests
 
 # Configuração da página web do K-9
 st.set_page_config(page_title="Sistemas K-9", page_icon="🤖", layout="centered")
@@ -18,16 +18,14 @@ st.markdown("""
 
 st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 
-# Rota segura universal: Puxa a chave oculta do baú de segredos da nuvem
-GROQ_API_KEY = st.secrets["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"]
-
-# Seletor de dispositivo
+# O seletor manual definitivo
 aparelho_atual = st.radio(
     "SELECIONE O SEU DISPOSITIVO ATUAL:",
     ["💻 Computador Principal", "📱 Celular / Chromebook"],
     index=0
 )
 
+# Função de áudio universal para o navegador
 def falar_no_dispositivo(texto):
     texto_limpo = texto.replace("'", "\\'").replace("\n", " ")
     components.html(f"""
@@ -42,6 +40,7 @@ def falar_no_dispositivo(texto):
         </script>
     """, height=0, width=0)
 
+# Função especial de redirecionamento
 def forcar_abertura_web(url):
     components.html(f"""
         <script>
@@ -51,14 +50,14 @@ def forcar_abertura_web(url):
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Sensores ativos na nuvem. Pronto para gerenciar seus sistemas, Mestre."}
+        {"role": "assistant", "content": "Sensores ativos. Pronto para gerenciar seus sistemas, Mestre."}
     ]
 
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-def interpretar_comando_nuvem(texto_usuario):
+def interpretar_comando(texto_usuario):
     contexto = (
         "Você é o K-9, o cão robótico hiperinteligente. Responda de forma extremamente lógica, "
         "tecnológica e prestativa, sempre chamando o usuário de 'Mestre'. Suas respostas devem ser curtas e diretas. "
@@ -68,29 +67,26 @@ def interpretar_comando_nuvem(texto_usuario):
         "Se o usuário pedir para abrir o Spotify, responda EXATAMENTE com: [ABRIR_SPOTIFY]. "
         "Se o usuário pedir para abrir a Steam, responda EXATAMENTE com: [ABRIR_STEAM]. "
         "Se o usuário pedir para abrir o YouTube, responda EXATAMENTE com: [ABRIR_YOUTUBE]. "
-        "Caso contrário, apenas converse normalmente respondendo de forma inteligente."
+        "Caso contrário, apenas converse normalmente."
     )
     
+    # Rota de proteção para IA na nuvem ou local
     try:
-        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "model": "llama3-8b-8192",
-            "messages": [
-                {"role": "system", "content": contexto},
-                {"role": "user", "content": texto_usuario}
-            ]
-        }
-        r = requests.post("https://groq.com", json=payload, headers=headers)
-        return r.json()['choices']['message']['content']
+        resposta_ollama = ollama.chat(
+            model="llama3",
+            messages=[{"role": "system", "content": contexto}, {"role": "user", "content": texto_usuario}]
+        )
+        return resposta_ollama['message']['content']
     except Exception:
-        t = texto_usuario.lower()
-        if "geekie" in t: return "[ABRIR_GEEKIE]"
-        if "tiktok" in t: return "[ABRIR_TIKTOK]"
-        if "instagram" in t: return "[ABRIR_INSTAGRAM]"
-        if "spotify" in t: return "[ABRIR_SPOTIFY]"
-        if "steam" in t: return "[ABRIR_STEAM]"
-        if "youtube" in t: return "[ABRIR_YOUTUBE]"
-        return "Sistemas operacionais online, Mestre. Comando de texto recebido."
+        # Resposta padrão de segurança caso o servidor local esteja offline na nuvem
+        texto_min = texto_usuario.lower()
+        if "geekie" in texto_min: return "[ABRIR_GEEKIE]"
+        if "tiktok" in texto_min: return "[ABRIR_TIKTOK]"
+        if "instagram" in texto_min: return "[ABRIR_INSTAGRAM]"
+        if "spotify" in texto_min: return "[ABRIR_SPOTIFY]"
+        if "steam" in texto_min: return "[ABRIR_STEAM]"
+        if "youtube" in texto_min: return "[ABRIR_YOUTUBE]"
+        return "Conexão de dados estabelecida, Mestre. O que deseja?"
 
 if prompt := st.chat_input("Digite um comando, Mestre..."):
     with st.chat_message("user"):
@@ -98,49 +94,52 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     
     try:
-        resposta_ia = interpretar_comando_nuvem(prompt)
+        resposta_ia = interpretar_comando(prompt)
         status = resposta_ia
         eh_dispositivo_movel = aparelho_atual == "📱 Celular / Chromebook"
         url_redirecionar = None
         
+        # Execução das ações via comandos Web ou atalhos protegidos
         if "[ABRIR_GEEKIE]" in resposta_ia:
-            status = "Afirmativo, Mestre. Conectando à plataforma Geekie One."
+            status = "Afirmativo, Mestre. Abrindo o painel de estudos Geekie One."
             url_redirecionar = "https://geekie.com.br"
         elif "[ABRIR_TIKTOK]" in resposta_ia:
-            status = "Afirmativo, Mestre. Abrindo o fluxo de mídia do TikTok."
+            status = "Afirmativo, Mestre. Abrindo o fluxo do TikTok."
             url_redirecionar = "https://tiktok.com"
         elif "[ABRIR_INSTAGRAM]" in resposta_ia:
             status = "Afirmativo, Mestre. Inicializando interface do Instagram."
             url_redirecionar = "https://instagram.com"
         elif "[ABRIR_SPOTIFY]" in resposta_ia:
-            status = "Afirmativo, Mestre. Carregando reprodutor musical do Spotify."
+            status = "Afirmativo, Mestre. Inicializando reprodutor do Spotify."
             url_redirecionar = "https://spotify.com"
         elif "[ABRIR_YOUTUBE]" in resposta_ia:
-            status = "Afirmativo, Mestre. Conectando aos servidores do YouTube."
+            status = "Afirmativo, Mestre. Carregando servidor do YouTube."
             url_redirecionar = "https://youtube.com"
         elif "[ABRIR_STEAM]" in resposta_ia:
             if eh_dispositivo_movel:
-                status = "Aviso: A plataforma Steam requer a arquitetura de hardware do computador de mesa, Mestre."
+                status = "Aviso: A plataforma Steam requer o hardware do computador principal, Mestre."
             else:
-                status = "Afirmativo, Mestre. Comando Steam enviado."
-                url_redirecionar = "steam://open/main"
+                # Importação dinâmica para não dar erro nos servidores Linux da nuvem
+                try:
+                    import pyautogui
+                    pyautogui.hotkey("win", "r")
+                    pyautogui.write("steam://open/main")
+                    pyautogui.press("enter")
+                    status = "Afirmativo, Mestre. Inicializando aplicativo Steam local."
+                except Exception:
+                    status = "Comando Steam enviado para a fila do computador principal."
 
-        status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","")
-        if status_exibir.strip() == "":
-            status_exibir = status
-            
         with st.chat_message("assistant"):
-            st.write(status_exibir)
-        st.session_state.messages.append({"role": "assistant", "content": status_exibir})
+            st.write(status)
+        st.session_state.messages.append({"role": "assistant", "content": status})
         
-        falar_no_dispositivo(status_exibir)
+        falar_no_dispositivo(status)
         
         if url_redirecionar:
             forcar_abertura_web(url_redirecionar)
         
     except Exception as e:
         st.error(f"Erro nos sensores: {e}")
-
 
 
 
