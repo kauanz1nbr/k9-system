@@ -19,7 +19,8 @@ st.markdown("""
 st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 
 # ROTA TOTALMENTE CORRIGIDA: Puxa o atalho de texto puro. Não cole seu código gsk aqui!
-GROQ_API_KEY = st.secrets["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"]
+GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+
 
 
 
