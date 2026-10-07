@@ -18,11 +18,11 @@ st.markdown("""
 
 st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 
-# ROTA TOTALMENTE CORRIGIDA: Puxa o atalho de texto puro. Não cole seu código gsk aqui!
+# Puxa a chave oculta da IA do baú seguro do Streamlit
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
-
-
+# CONFIGURAÇÃO DA PONTE NGROK DO SEU QUARTO (JÁ PRONTA COM O SEU LINK!)
+URL_PONTE_PC = "https://ngrok-free.dev"
 
 # Seletor de dispositivo
 aparelho_atual = st.radio(
@@ -54,7 +54,7 @@ def forcar_abertura_web(url):
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Sensores ativos na nuvem. Pronto para gerenciar seus sistemas, Mestre."}
+        {"role": "assistant", "content": "Sensores ativos na nuvem. Ponte ngrok vinculada ao PC doméstico. Pronto para suas ordens, Mestre."}
     ]
 
 for msg in st.session_state.messages:
@@ -71,6 +71,7 @@ def interpretar_comando_nuvem(texto_usuario):
         "Se o usuário pedir para abrir o Spotify, responda EXATAMENTE com: [ABRIR_SPOTIFY]. "
         "Se o usuário pedir para abrir a Steam, responda EXATAMENTE com: [ABRIR_STEAM]. "
         "Se o usuário pedir para abrir o YouTube, responda EXATAMENTE com: [ABRIR_YOUTUBE]. "
+        "Se o usuário pedir para desligar o computador ou fechar o PC, responda EXATAMENTE com: [DESLIGAR_PC]. "
         "Caso contrário, apenas converse normalmente respondendo de forma inteligente."
     )
     
@@ -93,7 +94,8 @@ def interpretar_comando_nuvem(texto_usuario):
         if "spotify" in t: return "[ABRIR_SPOTIFY]"
         if "steam" in t: return "[ABRIR_STEAM]"
         if "youtube" in t: return "[ABRIR_YOUTUBE]"
-        return "Sistemas operacionais online, Mestre. Comando de texto recebido."
+        if "desligar" in t or "fechar o pc" in t: return "[DESLIGAR_PC]"
+        return "Sistemas operacionais online, Mestre. Aguardando comando de voz."
 
 if prompt := st.chat_input("Digite um comando, Mestre..."):
     with st.chat_message("user"):
@@ -109,26 +111,36 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
         if "[ABRIR_GEEKIE]" in resposta_ia:
             status = "Afirmativo, Mestre. Conectando à plataforma Geekie One."
             url_redirecionar = "https://geekie.com.br"
+            
         elif "[ABRIR_TIKTOK]" in resposta_ia:
             status = "Afirmativo, Mestre. Abrindo o fluxo de mídia do TikTok."
             url_redirecionar = "https://tiktok.com"
+            
         elif "[ABRIR_INSTAGRAM]" in resposta_ia:
             status = "Afirmativo, Mestre. Inicializando interface do Instagram."
             url_redirecionar = "https://instagram.com"
-        elif "[ABRIR_SPOTIFY]" in resposta_ia:
-            status = "Afirmativo, Mestre. Carregando reprodutor musical do Spotify."
-            url_redirecionar = "https://spotify.com"
+            
         elif "[ABRIR_YOUTUBE]" in resposta_ia:
             status = "Afirmativo, Mestre. Conectando aos servidores do YouTube."
             url_redirecionar = "https://youtube.com"
-        elif "[ABRIR_STEAM]" in resposta_ia:
+            
+        elif "[ABRIR_SPOTIFY]" in resposta_ia:
             if eh_dispositivo_movel:
-                status = "Aviso: A plataforma Steam requer a arquitetura de hardware do computador de mesa, Mestre."
+                status = "Afirmativo, Mestre. Redirecionando dispositivo para o Spotify Web."
+                url_redirecionar = "https://spotify.com"
             else:
-                status = "Afirmativo, Mestre. Comando Steam enviado."
-                url_redirecionar = "steam://open/main"
+                status = "Afirmativo, Mestre. Enviando sinal de ativação do Spotify para o receptor local."
+                requests.post(URL_PONTE_PC, json={"acao": "SPOTIFY"})
+                
+        elif "[ABRIR_STEAM]" in resposta_ia:
+            status = "Afirmativo, Mestre. Inicializando aplicativo Steam no computador principal via ponte."
+            requests.post(URL_PONTE_PC, json={"acao": "STEAM"})
+                
+        elif "[DESLIGAR_PC]" in resposta_ia:
+            status = "🚨 PROTOCOLO CRÍTICO: Iniciando encerramento do computador principal em 30 segundos, Mestre."
+            requests.post(URL_PONTE_PC, json={"acao": "DESLIGAR_PC"})
 
-        status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","")
+        status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","").replace("[DESLIGAR_PC]","")
         if status_exibir.strip() == "":
             status_exibir = status
             
@@ -142,6 +154,4 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
             forcar_abertura_web(url_redirecionar)
         
     except Exception as e:
-        st.error(f"Erro nos sensores: {e}")
-
-
+        st.error(f"Erro nos sensores de rede: {e}")
