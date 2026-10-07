@@ -20,7 +20,8 @@ st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 
 # Configuração Secreta da API Groq na Nuvem para Inteligência Real
 # COLE SUA CHAVE GSK_ AQUI DENTRO DAS ASPAS SE QUISER TRAVAR DIRETO, OU DEIXE ANÔNIMO:
-GROQ_API_KEY = "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"
+GROQ_API_KEY = st.secrets[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]
+
 
 # Seletor de dispositivo
 aparelho_atual = st.radio(
@@ -108,7 +109,7 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
         
         if "[ABRIR_GEEKIE]" in resposta_ia:
             status = "Afirmativo, Mestre. Conectando à plataforma Geekie One."
-            url_redirecionar = "https://geekie.com.br"
+            url_redirecionar = "https://one.geekie.com.br"
         elif "[ABRIR_TIKTOK]" in resposta_ia:
             status = "Afirmativo, Mestre. Abrindo o fluxo de mídia do TikTok."
             url_redirecionar = "https://tiktok.com"
