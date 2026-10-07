@@ -18,10 +18,8 @@ st.markdown("""
 
 st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 
-# Configuração Secreta da API Groq na Nuvem para Inteligência Real
-# COLE SUA CHAVE GSK_ AQUI DENTRO DAS ASPAS SE QUISER TRAVAR DIRETO, OU DEIXE ANÔNIMO:
-GROQ_API_KEY = st.secrets[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]
-
+# Rota segura universal: Puxa a chave oculta do baú de segredos da nuvem
+GROQ_API_KEY = st.secrets["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"]
 
 # Seletor de dispositivo
 aparelho_atual = st.radio(
@@ -73,7 +71,6 @@ def interpretar_comando_nuvem(texto_usuario):
         "Caso contrário, apenas converse normalmente respondendo de forma inteligente."
     )
     
-    # Faz requisição para a IA ultra-rápida na nuvem
     try:
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         payload = {
@@ -84,9 +81,8 @@ def interpretar_comando_nuvem(texto_usuario):
             ]
         }
         r = requests.post("https://groq.com", json=payload, headers=headers)
-        return r.json()['choices'][0]['message']['content']
+        return r.json()['choices']['message']['content']
     except Exception:
-        # Fallback inteligente local por texto caso esteja sem chave
         t = texto_usuario.lower()
         if "geekie" in t: return "[ABRIR_GEEKIE]"
         if "tiktok" in t: return "[ABRIR_TIKTOK]"
@@ -109,7 +105,7 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
         
         if "[ABRIR_GEEKIE]" in resposta_ia:
             status = "Afirmativo, Mestre. Conectando à plataforma Geekie One."
-            url_redirecionar = "https://one.geekie.com.br"
+            url_redirecionar = "https://geekie.com.br"
         elif "[ABRIR_TIKTOK]" in resposta_ia:
             status = "Afirmativo, Mestre. Abrindo o fluxo de mídia do TikTok."
             url_redirecionar = "https://tiktok.com"
@@ -126,12 +122,10 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
             if eh_dispositivo_movel:
                 status = "Aviso: A plataforma Steam requer a arquitetura de hardware do computador de mesa, Mestre."
             else:
-                status = "Afirmativo, Mestre. Comando Steam enviado. (Abra pelo app local se estiver usando a rede de casa)."
+                status = "Afirmativo, Mestre. Comando Steam enviado."
                 url_redirecionar = "steam://open/main"
 
-        # Garante que o status limpe os gatilhos de texto ao exibir
         status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","")
-        
         if status_exibir.strip() == "":
             status_exibir = status
             
@@ -146,6 +140,7 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
         
     except Exception as e:
         st.error(f"Erro nos sensores: {e}")
+
 
 
 
