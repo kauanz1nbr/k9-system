@@ -21,8 +21,8 @@ st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 # Puxa a chave oculta da IA do baú seguro do Streamlit
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
-# CONFIGURAÇÃO DA PONTE NGROK DO SEU QUARTO (JÁ PRONTA COM O SEU LINK!)
-URL_PONTE_PC = "https://ngrok-free.dev"
+# ABRE A PONTE LENDO DIRETO DO BAÚ DE SEGREDOS DA NUVEM (PASSO 1 CONCLUÍDO!)
+URL_PONTE_PC = st.secrets["URL_NGROK"] + "/comando"
 
 # Seletor de dispositivo
 aparelho_atual = st.radio(
@@ -54,7 +54,7 @@ def forcar_abertura_web(url):
 
 if "messages" not in st.session_state:
     st.session_state.messages = [
-        {"role": "assistant", "content": "Sensores ativos na nuvem. Ponte ngrok vinculada ao PC doméstico. Pronto para suas ordens, Mestre."}
+        {"role": "assistant", "content": "Sensores ativos na nuvem. Ponte virtual K-9 inicializada. Pronto para suas ordens, Mestre."}
     ]
 
 for msg in st.session_state.messages:
@@ -95,7 +95,7 @@ def interpretar_comando_nuvem(texto_usuario):
         if "steam" in t: return "[ABRIR_STEAM]"
         if "youtube" in t: return "[ABRIR_YOUTUBE]"
         if "desligar" in t or "fechar o pc" in t: return "[DESLIGAR_PC]"
-        return "Sistemas operacionais online, Mestre. Aguardando comando de voz."
+        return "Sistemas operacionais online, Mestre. Aguardando conexão do túnel de rede."
 
 if prompt := st.chat_input("Digite um comando, Mestre..."):
     with st.chat_message("user"):
