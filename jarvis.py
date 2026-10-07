@@ -2,42 +2,31 @@ import os
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
+from datetime import datetime
 
-# Configuração da página web do K-9
+# Configuração visual clássica do K-9
 st.set_page_config(page_title="Sistemas K-9", page_icon="🤖", layout="centered")
 
 st.markdown("""
     <style>
     .stApp { background-color: #0e1117; color: #00ff66; }
     h1 { color: #00ff66; font-family: 'Courier New', monospace; text-align: center; }
-    .stApp [data-testid="stChatMessage"] { border: 1px solid #00ff66; border-radius: 10px; margin-bottom: 10px; }
-    .stRadio>label { color: #00ff66 !important; font-family: 'Courier New', monospace; }
-    div[data-testid="stRadio"] { border: 1px solid #00ff66; padding: 10px; border-radius: 10px; background-color: #1a1c23; }
+    .stApp [data-testid="stChatMessage"] { border: 1px solid #00ff66; border-radius: 10px; margin-bottom: 10px; background-color: #1a1c23; }
     </style>
 """, unsafe_allow_html=True)
 
-st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
+st.title("🐾 SISTEMAS OPERACIONAIS K-9")
 
+# Puxa o cérebro da nuvem guardado nos Secrets
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
-# Inicializa a fila de comandos no banco de dados temporário do Streamlit
-if "fila_comandos" not in st.session_state:
-    st.session_state.fila_comandos = []
-
-# Seletor de dispositivo
-aparelho_atual = st.radio(
-    "SELECIONE O SEU DISPOSITIVO ATUAL:",
-    ["💻 Computador Principal", "📱 Celular / Chromebook"],
-    index=0
-)
-
-# Cria uma página secreta oculta que o seu PC de casa vai ler para pegar as ordens
-if "comando" in st.query_params:
-    if st.session_state.fila_comandos:
-        st.write(st.session_state.fila_comandos.pop(0))
-    else:
-        st.write("NENHUM")
-    st.stop()
+# Inicializa o histórico de conversas e a agenda na memória da IA
+if "messages" not in st.session_state:
+    st.session_state.messages = [
+        {"role": "assistant", "content": "Sensores totalmente operacionais na nuvem, Mestre. Minha IA está ativa. O que deseja que eu faça ou agende hoje?"}
+    ]
+if "agenda" not in st.session_state:
+    st.session_state.agenda = []
 
 def falar_no_dispositivo(texto):
     texto_limpo = texto.replace("'", "\\'").replace("\n", " ")
@@ -47,105 +36,65 @@ def falar_no_dispositivo(texto):
                 window.speechSynthesis.cancel();
                 var utterance = new SpeechSynthesisUtterance('{texto_limpo}');
                 utterance.lang = 'pt-BR';
-                utterance.rate = 1.1;
+                utterance.rate = 1.15;
                 window.speechSynthesis.speak(utterance);
             }}
         </script>
     """, height=0, width=0)
 
-def forcar_abertura_web(url):
-    components.html(f"""
-        <script>
-            window.parent.location.href = "{url}";
-        </script>
-    """, height=0, width=0)
-
-if "messages" not in st.session_state:
-    st.session_state.messages = [
-        {"role": "assistant", "content": "Sensores ativos na nuvem. Central de comando K-9 online. Pronto para suas ordens, Mestre."}
-    ]
-
+# Exibe o histórico de conversa na tela verde futurista
 for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-def interpretar_comando_nuvem(texto_usuario):
+def conversar_com_k9(texto_usuario):
+    # Contexto para a IA agir como um cão robótico vivo, prestativo e conversador
     contexto = (
-        "Você é o K-9, o cão robótico hiperinteligente. Responda de forma extremamente lógica, "
-        "tecnológica e prestativa, sempre chamando o usuário de 'Mestre'. Suas respostas devem ser curtas e diretas. "
-        "Se o usuário pedir para abrir a Geekie One, responda EXATAMENTE com: [ABRIR_GEEKIE]. "
-        "Se o usuário pedir para abrir o TikTok, responda EXATAMENTE com: [ABRIR_TIKTOK]. "
-        "Se o usuário pedir para abrir o Instagram, responda EXATAMENTE com: [ABRIR_INSTAGRAM]. "
-        "Se o usuário pedir para abrir o Spotify, responda EXATAMENTE com: [ABRIR_SPOTIFY]. "
-        "Se o usuário pedir para abrir a Steam, responda EXATAMENTE com: [ABRIR_STEAM]. "
-        "Se o usuário pedir para abrir o YouTube, responda EXATAMENTE com: [ABRIR_YOUTUBE]. "
-        "Se o usuário pedir para desligar o computador ou fechar o PC, responda EXATAMENTE com: [DESLIGAR_PC]. "
-        "Caso contrário, apenas converse normalmente."
+        f"Você é o K-9, um cão robótico hiperinteligente, vivo e prestativa. Hoje é dia {datetime.now().strftime('%d/%m/%Y')}. "
+        "Não aja como uma IA tradicional e robótica. Converse como um ser humano parceiro, usando termos tecnológicos, "
+        "mas com personalidade. Sempre chame o usuário de 'Mestre'. Suas respostas devem ser diretas, dinâmicas e inteligentes. "
+        "Você tem total capacidade de conversar sobre qualquer assunto, ajudar a planejar o dia do Mestre e lembrar de compromissos. "
+        f"Agenda atual do Mestre caso ele pergunte: {st.session_state.agenda}."
     )
+    
     try:
         headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
         payload = {
             "model": "llama3-8b-8192",
             "messages": [
                 {"role": "system", "content": contexto},
+                *st.session_state.messages[-6:], # Lembra dos últimos blocos da conversa para manter o fluxo
                 {"role": "user", "content": texto_usuario}
             ]
         }
         r = requests.post("https://groq.com", json=payload, headers=headers)
         return r.json()['choices']['message']['content']
-    except Exception:
-        t = texto_usuario.lower()
-        if "geekie" in t: return "[ABRIR_GEEKIE]"
-        if "tiktok" in t: return "[ABRIR_TIKTOK]"
-        if "instagram" in t: return "[ABRIR_INSTAGRAM]"
-        if "spotify" in t: return "[ABRIR_SPOTIFY]"
-        if "steam" in t: return "[ABRIR_STEAM]"
-        if "youtube" in t: return "[ABRIR_YOUTUBE]"
-        if "desligar" in t: return "[DESLIGAR_PC]"
-        return "Sistemas operacionais ativos, Mestre."
+    except Exception as e:
+        return "Meus sistemas de linguagem sofreram uma oscilação, Mestre. Pode repetir?"
 
-if prompt := st.chat_input("Digite um comando, Mestre..."):
+# Captura a digitação do usuário
+if prompt := st.chat_input("Fale com o K-9, Mestre..."):
     with st.chat_message("user"):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
     
-    resposta_ia = interpretar_comando_nuvem(prompt)
-    status = resposta_ia
-    eh_dispositivo_movel = aparelho_atual == "📱 Celular / Chromebook"
-    url_redirecionar = None
+    # Processa o agendamento local rápido se o usuário pedir para marcar algo
+    ajudou_agenda = False
+    p = prompt.lower()
+    if "agende" in p or "marcar" in p or "lembrar" in p:
+        st.session_state.agenda.append(prompt)
+        ajudou_agenda = True
+        
+    # Aciona a IA real para responder de forma humana
+    resposta_ia = conversar_com_k9(prompt)
     
-    if "[ABRIR_GEEKIE]" in resposta_ia:
-        status = "Afirmativo, Mestre. Conectando à plataforma Geekie One."
-        url_redirecionar = "https://geekie.com.br"
-    elif "[ABRIR_TIKTOK]" in resposta_ia:
-        status = "Afirmativo, Mestre. Abrindo o fluxo de mídia do TikTok."
-        url_redirecionar = "https://tiktok.com"
-    elif "[ABRIR_INSTAGRAM]" in resposta_ia:
-        status = "Afirmativo, Mestre. Inicializando interface do Instagram."
-        url_redirecionar = "https://instagram.com"
-    elif "[ABRIR_YOUTUBE]" in resposta_ia:
-        status = "Afirmativo, Mestre. Conectando aos servidores do YouTube."
-        url_redirecionar = "https://youtube.com"
-    elif "[ABRIR_SPOTIFY]" in resposta_ia:
-        if eh_dispositivo_movel:
-            status = "Afirmativo, Mestre. Redirecionando dispositivo para o Spotify Web."
-            url_redirecionar = "https://spotify.com"
-        else:
-            status = "Afirmativo, Mestre. Adicionando ativação do Spotify na fila de tarefas do PC."
-            st.session_state.fila_comandos.append("SPOTIFY")
-    elif "[ABRIR_STEAM]" in resposta_ia:
-        status = "Afirmativo, Mestre. Adicionando abertura da Steam na fila de tarefas do computador principal."
-        st.session_state.fila_comandos.append("STEAM")
-    elif "[DESLIGAR_PC]" in resposta_ia:
-        status = "🚨 PROTOCOLO CRÍTICO: Comando de desligamento adicionado à fila do computador principal, Mestre."
-        st.session_state.fila_comandos.append("DESLIGAR_PC")
-
-    status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","").replace("[DESLIGAR_PC]","")
-    
+    if ajudou_agenda and "agenda" not in resposta_ia.lower():
+        resposta_ia += " (Nota: Eu já registrei esse compromisso nos meus bancos de dados da agenda, Mestre!)"
+        
     with st.chat_message("assistant"):
-        st.write(status_exibir)
-    st.session_state.messages.append({"role": "assistant", "content": status_exibir})
-    falar_no_dispositivo(status_exibir)
+        st.write(resposta_ia)
+    st.session_state.messages.append({"role": "assistant", "content": resposta_ia})
     
-    if url_redirecionar:
-        forcar_abertura_web(url_redirecionar)
+    # Faz o K-9 falar alto por voz no seu alto-falante
+    falar_no_dispositivo(resposta_ia)
+
