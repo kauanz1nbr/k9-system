@@ -22,6 +22,7 @@ st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 GROQ_API_KEY = st.secrets["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"]
 
 
+
 # Seletor de dispositivo
 aparelho_atual = st.radio(
     "SELECIONE O SEU DISPOSITIVO ATUAL:",
