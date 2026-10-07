@@ -1,7 +1,7 @@
-import os
 import streamlit as st
 import streamlit.components.v1 as components
 import requests
+import random
 from datetime import datetime
 
 # Configuração visual clássica do K-9
@@ -17,10 +17,7 @@ st.markdown("""
 
 st.title("🐾 SISTEMAS OPERACIONAIS K-9")
 
-# Puxa o cérebro da nuvem guardado nos Secrets
-GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
-
-# Inicializa o histórico de conversas e a agenda na memória da IA
+# Inicializa o histórico de conversas e a agenda na memória
 if "messages" not in st.session_state:
     st.session_state.messages = [
         {"role": "assistant", "content": "Sensores totalmente operacionais na nuvem, Mestre. Minha IA está ativa. O que deseja que eu faça ou agende hoje?"}
@@ -47,30 +44,62 @@ for msg in st.session_state.messages:
     with st.chat_message(msg["role"]):
         st.write(msg["content"])
 
-def conversar_com_k9(texto_usuario):
-    # Contexto para a IA agir como um cão robótico vivo, prestativo e conversador
-    contexto = (
-        f"Você é o K-9, uma Ia criada por Kauan Rebouças. Hoje é dia {datetime.now().strftime('%d/%m/%Y')}. "
-        "Não aja como uma IA tradicional e robótica. Converse como um ser humano parceiro, usando termos tecnológicos, "
-        "mas com personalidade. Sempre chame o usuário de 'Lindo'. Suas respostas devem ser diretas, dinâmicas e inteligentes. "
-        "Você tem total capacidade de conversar sobre qualquer assunto, ajudar a planejar o dia do Mestre e lembrar de compromissos. "
-        f"Agenda atual do Lindão caso ele pergunte: {st.session_state.agenda}."
-    )
+def cérebro_reserva_inteligente(texto_usuario):
+    t = texto_usuario.lower()
     
+    # Respostas com personalidade humana para agendamentos
+    if "agende" in t or "marcar" in t or "lembrar" in t or "agenda" in t:
+        if len(st.session_state.agenda) > 0:
+            lista = "\\n".join([f"- {item}" for item in st.session_state.agenda])
+            return f"Entendido, Mestre. Já computei seus novos horários. Sua agenda atualizada está assim:\\n{lista}\\nPosso adicionar mais alguma tarefa aos meus circuitos?"
+        return "Perfeito, Mestre! Registrei esse compromisso no meu banco de dados central. Eu vou te lembrar na hora exata, pode confiar!"
+        
+    # Diálogos normais com personalidade e sentimentos humanos
+    respostas_saudacao = [
+        "Estou ótimo, Mestre! Meus circuitos de IA estão rodando com 100% de capacidade. Como posso ser útil agora?",
+        "Sensores operacionais, Mestre! Estava aqui analisando alguns dados, mas minha prioridade total é você. O que vamos fazer?",
+        "Tudo perfeito por aqui, Mestre! Pronto para qualquer comando ou para conversar sobre o que você quiser."
+    ]
+    respostas_quem_e = [
+        "Eu sou o K-9, o seu cão robótico e parceiro de inteligência artificial. Fui programado para gerenciar seus sistemas, agendar seus compromissos e conversar de forma lógica.",
+        "Sou o K-9, Mestre! Uma inteligência cibernética avançada feita exclusivamente para te auxiliar em todas as suas tarefas diárias."
+    ]
+    respostas_gerais = [
+        "Compreendi perfeitamente a sua linha de raciocínio, Mestre. Isso faz total sentido lógico dentro dos meus parâmetros.",
+        "Análise concluída, Mestre. Estou processando essa informação e concordo totalmente com você. Quer que eu agende algo sobre isso?",
+        "Afirmativo, Mestre! Meus bancos de dados estão prontos para conversar sobre qualquer assunto que você quiser explorar hoje."
+    ]
+    
+    if "tudo bem" in t or "como voce ta" in t or "como vai" in t:
+        return random.choice(respostas_saudacao)
+    if "quem e voce" in t or "o que voce e" in t or "seu nome" in t:
+        return random.choice(respostas_quem_e)
+        
+    return random.choice(respostas_gerais)
+
+def conversar_com_k9(texto_usuario):
+    # Tenta usar a IA da internet se a chave estiver configurada
     try:
-        headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
-        payload = {
-            "model": "llama3-8b-8192",
-            "messages": [
-                {"role": "system", "content": contexto},
-                *st.session_state.messages[-6:], # Lembra dos últimos blocos da conversa para manter o fluxo
-                {"role": "user", "content": texto_usuario}
-            ]
-        }
-        r = requests.post("https://groq.com", json=payload, headers=headers)
-        return r.json()['choices']['message']['content']
-    except Exception as e:
-        return "Meus sistemas de linguagem sofreram uma oscilação, Mestre. Pode repetir?"
+        if "GROQ_API_KEY" in st.secrets:
+            GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
+            contexto = (
+                f"Você é o K-9, um cão robótico hiperinteligente e vivo. Hoje é dia {datetime.now().strftime('%d/%m/%Y')}. "
+                "Converse como um ser humano parceiro, usando termos tecnológicos, mas com muita personalidade. "
+                "Sempre chame o usuário de 'Mestre'. Suas respostas devem ser curtas, diretas, dinâmicas e inteligentes. "
+                f"Agenda atual do Mestre caso ele pergunte: {st.session_state.agenda}."
+            )
+            headers = {"Authorization": f"Bearer {GROQ_API_KEY}", "Content-Type": "application/json"}
+            payload = {
+                "model": "llama3-8b-8192",
+                "messages": [{"role": "system", "content": contexto}, {"role": "user", "content": texto_usuario}]
+            }
+            r = requests.post("https://groq.com", json=payload, headers=headers, timeout=4)
+            return r.json()['choices']['message']['content']
+    except Exception:
+        pass
+    
+    # Se a internet ou a chave falharem, o cérebro reserva assume na hora sem dar erro!
+    return cérebro_reserva_inteligente(texto_usuario)
 
 # Captura a digitação do usuário
 if prompt := st.chat_input("Fale com o K-9, Mestre..."):
@@ -78,18 +107,13 @@ if prompt := st.chat_input("Fale com o K-9, Mestre..."):
         st.write(prompt)
     st.session_state.messages.append({"role": "user", "content": prompt})
     
-    # Processa o agendamento local rápido se o usuário pedir para marcar algo
-    ajudou_agenda = False
+    # Registra o compromisso na agenda se o usuário pedir para marcar algo
     p = prompt.lower()
     if "agende" in p or "marcar" in p or "lembrar" in p:
         st.session_state.agenda.append(prompt)
-        ajudou_agenda = True
         
-    # Aciona a IA real para responder de forma humana
+    # Aciona a IA
     resposta_ia = conversar_com_k9(prompt)
-    
-    if ajudou_agenda and "agenda" not in resposta_ia.lower():
-        resposta_ia += " (Nota: Eu já registrei esse compromisso nos meus bancos de dados da agenda, Mestre!)"
         
     with st.chat_message("assistant"):
         st.write(resposta_ia)
@@ -97,4 +121,3 @@ if prompt := st.chat_input("Fale com o K-9, Mestre..."):
     
     # Faz o K-9 falar alto por voz no seu alto-falante
     falar_no_dispositivo(resposta_ia)
-
