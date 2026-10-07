@@ -21,7 +21,7 @@ st.title("🐾 SISTEMAS K-9 OPERACIONAIS")
 # Puxa a chave oculta da IA do baú seguro do Streamlit
 GROQ_API_KEY = st.secrets["GROQ_API_KEY"]
 
-# ABRE A PONTE LENDO DIRETO DO BAÚ DE SEGREDOS DA NUVEM (PASSO 1 CONCLUÍDO!)
+# ABRE A PONTE LENDO DIRETO DO BAÚ DE SEGREDOS DA NUVEM
 URL_PONTE_PC = st.secrets["URL_NGROK"] + "/comando"
 
 # Seletor de dispositivo
@@ -130,15 +130,15 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
                 url_redirecionar = "https://spotify.com"
             else:
                 status = "Afirmativo, Mestre. Enviando sinal de ativação do Spotify para o receptor local."
-                requests.post(URL_PONTE_PC, json={"acao": "SPOTIFY"})
+                requests.post(URL_PONTE_PC, json={"acao": "SPOTIFY"}, verify=False)
                 
         elif "[ABRIR_STEAM]" in resposta_ia:
             status = "Afirmativo, Mestre. Inicializando aplicativo Steam no computador principal via ponte."
-            requests.post(URL_PONTE_PC, json={"acao": "STEAM"})
+            requests.post(URL_PONTE_PC, json={"acao": "STEAM"}, verify=False)
                 
         elif "[DESLIGAR_PC]" in resposta_ia:
             status = "🚨 PROTOCOLO CRÍTICO: Iniciando encerramento do computador principal em 30 segundos, Mestre."
-            requests.post(URL_PONTE_PC, json={"acao": "DESLIGAR_PC"})
+            requests.post(URL_PONTE_PC, json={"acao": "DESLIGAR_PC"}, verify=False)
 
         status_exibir = status.replace("[ABRIR_GEEKIE]","").replace("[ABRIR_TIKTOK]","").replace("[ABRIR_INSTAGRAM]","").replace("[ABRIR_SPOTIFY]","").replace("[ABRIR_STEAM]","").replace("[ABRIR_YOUTUBE]","").replace("[DESLIGAR_PC]","")
         if status_exibir.strip() == "":
@@ -155,3 +155,4 @@ if prompt := st.chat_input("Digite um comando, Mestre..."):
         
     except Exception as e:
         st.error(f"Erro nos sensores de rede: {e}")
+
